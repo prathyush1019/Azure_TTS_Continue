@@ -1,0 +1,6 @@
+# requirements.txt
+azure-cognitiveservices-speech
+python-dotenv
+fastapi
+uvicorn[standard]
+websockets

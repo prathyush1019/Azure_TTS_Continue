@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Azure TTS – Streaming & Benchmark</title>
+    <meta name="description" content="Azure Text-to-Speech with WebSocket streaming and live latency benchmarking" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --bg-input: rgba(255, 255, 255, 0.07);
+            --bg-table-row: rgba(255, 255, 255, 0.02);
+            --bg-table-row-alt: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(99, 140, 255, 0.5);
+            --text-primary: #e8ecf4;
+            --text-secondary: #8892a6;
+            --text-muted: #5a6478;
+            --accent: #638cff;
+            --accent-glow: rgba(99, 140, 255, 0.25);
+            --accent-hover: #7da1ff;
+            --success: #34d399;
+            --success-bg: rgba(52, 211, 153, 0.1);
+            --error: #f87171;
+            --error-bg: rgba(248, 113, 113, 0.1);
+            --warning: #fbbf24;
+            --warning-bg: rgba(251, 191, 36, 0.1);
+            --purple: #a78bfa;
+            --purple-bg: rgba(167, 139, 250, 0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 140, 255, 0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139, 92, 246, 0.06), transparent);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* ── Header ─────────────────────────────── */
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            margin-top: 0.4rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* ── Tabs ───────────────────────────────── */
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition);
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-secondary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* ── Card ───────────────────────────────── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            backdrop-filter: blur(20px);
+            transition: background var(--transition);
+        }
+
+        .card+.card {
+            margin-top: 1rem;
+        }
+
+        /* ── Form elements ──────────────────────── */
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.875rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color var(--transition), box-shadow var(--transition);
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        textarea:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--accent-hover);
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn.shimmer {
+            background: linear-gradient(90deg, var(--accent), #8b5cf6, var(--accent));
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: -100% 0;
+            }
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-card-hover);
+            box-shadow: none;
+            color: var(--text-primary);
+        }
+
+        /* ── Status Bar ─────────────────────────── */
+        .status-bar {
+            margin-top: 1rem;
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.65rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            transition: all var(--transition);
+        }
+
+        .status-bar.visible {
+            display: flex;
+        }
+
+        .status-bar.connecting {
+            background: var(--warning-bg);
+            border: 1px solid rgba(251, 191, 36, 0.15);
+            color: var(--warning);
+        }
+
+        .status-bar.streaming {
+            background: var(--accent-glow);
+            border: 1px solid rgba(99, 140, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .status-bar.done {
+            background: var(--success-bg);
+            border: 1px solid rgba(52, 211, 153, 0.15);
+            color: var(--success);
+        }
+
+        .status-bar.error {
+            background: var(--error-bg);
+            border: 1px solid rgba(248, 113, 113, 0.15);
+            color: var(--error);
+        }
+
+        .status-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .audio-bars {
+            display: flex;
+            align-items: end;
+            gap: 2px;
+            height: 16px;
+        }
+
+        .audio-bars .bar {
+            width: 3px;
+            background: currentColor;
+            border-radius: 1.5px;
+            animation: audio-bar 0.8s ease-in-out infinite alternate;
+        }
+
+        .audio-bars .bar:nth-child(1) {
+            height: 40%;
+            animation-delay: 0s;
+        }
+
+        .audio-bars .bar:nth-child(2) {
+            height: 70%;
+            animation-delay: 0.15s;
+        }
+
+        .audio-bars .bar:nth-child(3) {
+            height: 100%;
+            animation-delay: 0.3s;
+        }
+
+        .audio-bars .bar:nth-child(4) {
+            height: 55%;
+            animation-delay: 0.45s;
+        }
+
+        @keyframes audio-bar {
+            0% {
+                transform: scaleY(0.4);
+            }
+
+            100% {
+                transform: scaleY(1);
+            }
+        }
+
+        /* ── Metrics row ────────────────────────── */
+        .metrics {
+            display: none;
+            margin-top: 1rem;
+            gap: 0.75rem;
+        }
+
+        .metrics.visible {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .metric-card {
+            padding: 0.75rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            margin-top: 0.15rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-unit {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .audio-section {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .audio-section.visible {
+            display: block;
+        }
+
+        .audio-section audio {
+            width: 100%;
+            height: 40px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* ── Benchmark ──────────────────────────── */
+        .benchmark-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .benchmark-header p {
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            margin: 0;
+        }
+
+        .progress-container {
+            margin-top: 1.25rem;
+            display: none;
+        }
+
+        .progress-container.visible {
+            display: block;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* ── Summary Cards ──────────────────────── */
+        .summary-grid {
+            display: none;
+            margin-top: 1.25rem;
+            gap: 0.6rem;
+        }
+
+        .summary-grid.visible {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+
+        .summary-card {
+            padding: 0.875rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        .summary-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .summary-card.active {
+            border-color: rgba(99, 140, 255, 0.3);
+            background: var(--accent-glow);
+        }
+
+        .summary-group {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .summary-avg {
+            margin-top: 0.3rem;
+            font-size: 1.4rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .summary-avg .unit {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .summary-range {
+            margin-top: 0.2rem;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── Results Table ──────────────────────── */
+        .results-table-wrap {
+            margin-top: 1.25rem;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .results-table-wrap.visible {
+            display: block;
+        }
+
+        .results-table-wrap::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .results-table-wrap::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .results-table-wrap::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        th {
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: rgba(11, 15, 25, 0.95);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 0.55rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        tr:nth-child(even) td {
+            background: var(--bg-table-row-alt);
+        }
+
+        td:last-child {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .latency-good {
+            color: var(--success);
+        }
+
+        .latency-ok {
+            color: var(--warning);
+        }
+
+        .latency-bad {
+            color: var(--error);
+        }
+
+        .td-error {
+            color: var(--error);
+            font-style: italic;
+        }
+
+        .row-enter {
+            animation: rowFadeIn 0.3s ease forwards;
+        }
+
+        @keyframes rowFadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .group-label {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            background: var(--purple-bg);
+            color: var(--purple);
+        }
+
+        /* ── Export button area ──────────────────── */
+        .export-area {
+            margin-top: 1rem;
+            display: none;
+            gap: 0.5rem;
+        }
+
+        .export-area.visible {
+            display: flex;
+        }
+
+        /* ── Footer ─────────────────────────────── */
+        .footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Azure Text-to-Speech</h1>
+            <p>Real-time streaming &amp; latency benchmarking</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="synthesize" id="tabSynthesize">⚡ Synthesize</button>
+            <button class="tab-btn" data-tab="benchmark" id="tabBenchmark">📊 Latency Benchmark</button>
+        </div>
+
+        <!-- ═══ Synthesize Tab ════════════════════════ -->
+        <div class="tab-panel active" id="panel-synthesize">
+            <div class="card">
+                <label for="textInput">Enter text</label>
+                <textarea id="textInput"
+                    placeholder="Type something to synthesize…">The quick brown fox jumps over the lazy dog.</textarea>
+                <button id="speakBtn" class="btn btn-full" style="margin-top: 1rem;">Synthesize &amp; Stream</button>
+
+                <div id="statusBar" class="status-bar">
+                    <span id="statusIcon" class="status-icon"></span>
+                    <span id="statusText"></span>
+                </div>
+
+                <div id="metrics" class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-label">First Chunk Latency</div>
+                        <div class="metric-value"><span id="latencyValue">—</span> <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Chunks Received</div>
+                        <div class="metric-value"><span id="chunkCount">—</span></div>
+                    </div>
+                </div>
+
+                <div id="audioSection" class="audio-section">
+                    <audio id="audioPlayer" controls></audio>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Benchmark Tab ═════════════════════════ -->
+        <div class="tab-panel" id="panel-benchmark">
+            <div class="card">
+                <div class="benchmark-header">
+                    <div>
+                        <label style="margin-bottom:0.2rem">Latency Benchmark</label>
+                        <p>Runs all test phrases from <strong>input.json</strong> and measures first-chunk latency</p>
+                    </div>
+                    <button id="runBenchmarkBtn" class="btn">Run Benchmark</button>
+                </div>
+
+                <div id="bmStatus" class="status-bar"></div>
+
+                <!-- Progress -->
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-info">
+                        <span id="progressLabel">Initializing…</span>
+                        <span id="progressPct">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Summary cards -->
+                <div id="summaryGrid" class="summary-grid"></div>
+
+                <!-- Detailed results table -->
+                <div id="tableWrap" class="results-table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Group</th>
+                                <th>Phrase</th>
+                                <th style="text-align:right">Latency (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Export -->
+                <div id="exportArea" class="export-area">
+                    <button id="exportJsonBtn" class="btn btn-secondary">Export JSON</button>
+                    <button id="exportCsvBtn" class="btn btn-secondary">Export CSV</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">Powered by Azure Cognitive Services Speech SDK · FastAPI · WebSocket</div>
+    </div>
+
+    <script>
+        (() => {
+            // ════════════════════════════════════════════════════════════════════
+            //  TABS
+            // ════════════════════════════════════════════════════════════════════
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+                });
+            });
+
+            // ════════════════════════════════════════════════════════════════════
+            //  SYNTHESIZE TAB  (same as before)
+            // ════════════════════════════════════════════════════════════════════
+            const SAMPLE_RATE = 24000, CHANNELS = 1, BIT_DEPTH = 16;
+            const btn = document.getElementById('speakBtn');
+            const textInput = document.getElementById('textInput');
+            const statusBar = document.getElementById('statusBar');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const metricsEl = document.getElementById('metrics');
+            const latencyVal = document.getElementById('latencyValue');
+            const chunkCountEl = document.getElementById('chunkCount');
+            const audioSection = document.getElementById('audioSection');
+            const audioPlayer = document.getElementById('audioPlayer');
+            let isStreaming = false, audioCtx = null;
+
+            function setStatus(bar, iconEl, textEl, type, text) {
+                bar.className = `status-bar visible ${type}`;
+                textEl.textContent = text;
+                if (type === 'streaming') {
+                    iconEl.innerHTML = `<div class="audio-bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>`;
+                } else if (type === 'connecting') {
+                    iconEl.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite"/></circle></svg>`;
+                } else if (type === 'done') {
+                    iconEl.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+                } else if (type === 'error') {
+                    iconEl.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+                }
+            }
+
+            function setSynthStatus(type, text) { setStatus(statusBar, statusIcon, statusText, type, text); }
+
+            function int16ToFloat32(i16) { const f = new Float32Array(i16.length); for (let i = 0; i < i16.length; i++) f[i] = i16[i] / 32768; return f; }
+
+            function scheduleChunk(f32, nextT) {
+                const buf = audioCtx.createBuffer(CHANNELS, f32.length, SAMPLE_RATE);
+                buf.getChannelData(0).set(f32);
+                const src = audioCtx.createBufferSource();
+                src.buffer = buf; src.connect(audioCtx.destination);
+                const t = Math.max(audioCtx.currentTime, nextT);
+                src.start(t);
+                return t + buf.duration;
+            }
+
+            function pcmToWav(pcm) {
+                const h = new ArrayBuffer(44), v = new DataView(h), dl = pcm.byteLength, bps = BIT_DEPTH / 8;
+                const ws = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+                ws(v, 0, 'RIFF'); v.setUint32(4, 36 + dl, true); ws(v, 8, 'WAVE'); ws(v, 12, 'fmt ');
+                v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, CHANNELS, true);
+                v.setUint32(24, SAMPLE_RATE, true); v.setUint32(28, SAMPLE_RATE * CHANNELS * bps, true);
+                v.setUint16(32, CHANNELS * bps, true); v.setUint16(34, BIT_DEPTH, true);
+                ws(v, 36, 'data'); v.setUint32(40, dl, true);
+                const w = new Uint8Array(44 + dl); w.set(new Uint8Array(h), 0); w.set(new Uint8Array(pcm), 44);
+                return w.buffer;
+            }
+
+            async function streamSynthesize(text) {
+                if (isStreaming) return;
+                isStreaming = true; btn.disabled = true; btn.classList.add('shimmer'); btn.textContent = 'Streaming…';
+                metricsEl.classList.remove('visible'); audioSection.classList.remove('visible'); audioPlayer.src = '';
+                if (!audioCtx || audioCtx.state === 'closed') audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                setSynthStatus('connecting', 'Connecting to server…');
+                const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+                let ws;
+                try { ws = new WebSocket(`${proto}://${location.host}/ws/synthesize`); } catch (e) { setSynthStatus('error', e.message); resetSynth(); return; }
+                const pcmChunks = []; let chunks = 0, totalBytes = 0, nextT = 0;
+                ws.binaryType = 'arraybuffer';
+                ws.onopen = () => { setSynthStatus('streaming', 'Streaming audio…'); ws.send(JSON.stringify({ text })); };
+                ws.onmessage = (evt) => {
+                    if (evt.data instanceof ArrayBuffer) {
+                        pcmChunks.push(new Uint8Array(evt.data)); totalBytes += evt.data.byteLength; chunks++;
+                        chunkCountEl.textContent = chunks;
+                        nextT = scheduleChunk(int16ToFloat32(new Int16Array(evt.data)), nextT);
+                        setSynthStatus('streaming', `Playing… ${chunks} chunks (${(totalBytes / 1024).toFixed(1)} KB)`);
+                    } else {
+                        try {
+                            const msg = JSON.parse(evt.data);
+                            if (msg.done) {
+                                latencyVal.textContent = msg.latency_ms != null ? msg.latency_ms.toFixed(1) : '—';
+                                metricsEl.classList.add('visible');
+                                setSynthStatus('done', `Completed – ${chunks} chunks, ${(totalBytes / 1024).toFixed(1)} KB`);
+                                const combined = new Uint8Array(totalBytes); let off = 0;
+                                for (const c of pcmChunks) { combined.set(c, off); off += c.byteLength; }
+                                audioPlayer.src = URL.createObjectURL(new Blob([pcmToWav(combined.buffer)], { type: 'audio/wav' }));
+                                audioSection.classList.add('visible');
+                            } else if (msg.error) { setSynthStatus('error', msg.error); }
+                        } catch { }
+                        ws.close(); resetSynth();
+                    }
+                };
+                ws.onerror = () => { setSynthStatus('error', 'WebSocket error'); resetSynth(); };
+                ws.onclose = () => { resetSynth(); };
+            }
+
+            function resetSynth() { isStreaming = false; btn.disabled = false; btn.classList.remove('shimmer'); btn.textContent = 'Synthesize & Stream'; }
+
+            btn.addEventListener('click', () => { const t = textInput.value.trim(); if (!t) { setSynthStatus('error', 'Enter text.'); return; } streamSynthesize(t); });
+            textInput.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); btn.click(); } });
+
+
+            // ════════════════════════════════════════════════════════════════════
+            //  BENCHMARK TAB
+            // ════════════════════════════════════════════════════════════════════
+            const runBtn = document.getElementById('runBenchmarkBtn');
+            const bmStatusBar = document.getElementById('bmStatus');
+            const progressCont = document.getElementById('progressContainer');
+            const progressLabel = document.getElementById('progressLabel');
+            const progressPct = document.getElementById('progressPct');
+            const progressFill = document.getElementById('progressFill');
+            const summaryGrid = document.getElementById('summaryGrid');
+            const tableWrap = document.getElementById('tableWrap');
+            const resultsBody = document.getElementById('resultsBody');
+            const exportArea = document.getElementById('exportArea');
+            const exportJsonBtn = document.getElementById('exportJsonBtn');
+            const exportCsvBtn = document.getElementById('exportCsvBtn');
+
+            let benchmarkRunning = false;
+            let benchmarkResults = [];   // all phrase results for export
+            let benchmarkSummary = {};
+
+            function setBmStatus(type, text) {
+                bmStatusBar.className = `status-bar visible ${type}`;
+                bmStatusBar.innerHTML = '';
+                const icon = document.createElement('span');
+                icon.className = 'status-icon';
+                if (type === 'streaming') {
+                    icon.innerHTML = `<div class="audio-bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>`;
+                } else if (type === 'connecting') {
+                    icon.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite"/></circle></svg>`;
+                } else if (type === 'done') {
+                    icon.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+                } else if (type === 'error') {
+                    icon.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+                }
+                const span = document.createElement('span');
+                span.textContent = text;
+                bmStatusBar.appendChild(icon);
+                bmStatusBar.appendChild(span);
+            }
+
+            function latencyClass(ms) {
+                if (ms == null) return 'td-error';
+                if (ms < 300) return 'latency-good';
+                if (ms < 600) return 'latency-ok';
+                return 'latency-bad';
+            }
+
+            function runBenchmark() {
+                if (benchmarkRunning) return;
+                benchmarkRunning = true;
+                benchmarkResults = [];
+                benchmarkSummary = {};
+                runBtn.disabled = true;
+                runBtn.classList.add('shimmer');
+                runBtn.textContent = 'Running…';
+
+                // Reset UI
+                resultsBody.innerHTML = '';
+                summaryGrid.innerHTML = '';
+                summaryGrid.classList.remove('visible');
+                tableWrap.classList.remove('visible');
+                exportArea.classList.remove('visible');
+                progressCont.classList.add('visible');
+                progressFill.style.width = '0%';
+                progressLabel.textContent = 'Connecting…';
+                progressPct.textContent = '0%';
+
+                setBmStatus('connecting', 'Connecting to benchmark service…');
+
+                const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+                let ws;
+                try { ws = new WebSocket(`${proto}://${location.host}/ws/benchmark`); }
+                catch (e) { setBmStatus('error', e.message); resetBm(); return; }
+
+                let totalPhrases = 0, completedPhrases = 0;
+                // Pre-create summary card elements by group
+                const summaryCards = {};
+
+                ws.onopen = () => {
+                    setBmStatus('streaming', 'Benchmark started…');
+                    ws.send(JSON.stringify({ action: 'start' }));
+                };
+
+                ws.onmessage = (evt) => {
+                    let msg;
+                    try { msg = JSON.parse(evt.data); } catch { return; }
+
+                    if (msg.error) {
+                        setBmStatus('error', msg.error);
+                        ws.close();
+                        resetBm();
+                        return;
+                    }
+
+                    switch (msg.type) {
+                        case 'info':
+                            totalPhrases = msg.total_phrases;
+                            tableWrap.classList.add('visible');
+                            summaryGrid.classList.add('visible');
+                            // Pre-create summary cards
+                            msg.groups.forEach(g => {
+                                const card = document.createElement('div');
+                                card.className = 'summary-card';
+                                card.innerHTML = `
+                                <div class="summary-group">${g.replace('_', ' ')}</div>
+                                <div class="summary-avg">—<span class="unit"> ms</span></div>
+                                <div class="summary-range">—</div>
+                            `;
+                                summaryGrid.appendChild(card);
+                                summaryCards[g] = card;
+                            });
+                            progressLabel.textContent = `0 / ${totalPhrases} phrases`;
+                            break;
+
+                        case 'group_start':
+                            // Highlight active card
+                            Object.values(summaryCards).forEach(c => c.classList.remove('active'));
+                            if (summaryCards[msg.group]) {
+                                summaryCards[msg.group].classList.add('active');
+                                summaryCards[msg.group].classList.add('visible');
+                            }
+                            progressLabel.textContent = `Testing ${msg.group.replace('_', ' ')}…`;
+                            break;
+
+                        case 'phrase_result':
+                            completedPhrases++;
+                            const pct = Math.round((completedPhrases / totalPhrases) * 100);
+                            progressFill.style.width = pct + '%';
+                            progressPct.textContent = pct + '%';
+                            progressLabel.textContent = `${completedPhrases} / ${totalPhrases} phrases`;
+
+                            benchmarkResults.push(msg);
+
+                            // Add table row
+                            const tr = document.createElement('tr');
+                            tr.className = 'row-enter';
+                            const cls = latencyClass(msg.latency_ms);
+                            tr.innerHTML = `
+                            <td><span class="group-label">${msg.group.replace('_', ' ')}</span></td>
+                            <td>${msg.phrase}</td>
+                            <td style="text-align:right" class="${cls}">${msg.latency_ms != null ? msg.latency_ms.toFixed(1) : 'error'}</td>
+                        `;
+                            resultsBody.appendChild(tr);
+                            // Auto-scroll table
+                            tableWrap.scrollTop = tableWrap.scrollHeight;
+
+                            setBmStatus('streaming', `Testing… ${completedPhrases}/${totalPhrases} phrases`);
+                            break;
+
+                        case 'group_done':
+                            const card = summaryCards[msg.group];
+                            if (card) {
+                                card.classList.remove('active');
+                                card.classList.add('visible');
+                                if (msg.avg_ms != null) {
+                                    card.querySelector('.summary-avg').innerHTML =
+                                        `${msg.avg_ms.toFixed(1)}<span class="unit"> ms</span>`;
+                                    card.querySelector('.summary-range').textContent =
+                                        `min ${msg.min_ms.toFixed(1)} · max ${msg.max_ms.toFixed(1)}`;
+                                } else {
+                                    card.querySelector('.summary-avg').innerHTML = `—<span class="unit"> ms</span>`;
+                                    card.querySelector('.summary-range').textContent = 'no data';
+                                }
+                            }
+                            break;
+
+                        case 'done':
+                            benchmarkSummary = msg.summary;
+                            progressFill.style.width = '100%';
+                            progressPct.textContent = '100%';
+                            progressLabel.textContent = `${totalPhrases} / ${totalPhrases} phrases – Complete`;
+                            setBmStatus('done', `Benchmark complete — ${totalPhrases} phrases tested`);
+                            exportArea.classList.add('visible');
+                            ws.close();
+                            resetBm();
+                            break;
+                    }
+                };
+
+                ws.onerror = () => { setBmStatus('error', 'WebSocket error'); resetBm(); };
+                ws.onclose = () => { resetBm(); };
+            }
+
+            function resetBm() {
+                benchmarkRunning = false;
+                runBtn.disabled = false;
+                runBtn.classList.remove('shimmer');
+                runBtn.textContent = 'Run Benchmark';
+            }
+
+            runBtn.addEventListener('click', runBenchmark);
+
+            // ── Export ────────────────────────────────────
+            exportJsonBtn.addEventListener('click', () => {
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    summary: benchmarkSummary,
+                    results: benchmarkResults,
+                };
+                downloadFile('latency_report.json', JSON.stringify(data, null, 2), 'application/json');
+            });
+
+            exportCsvBtn.addEventListener('click', () => {
+                let csv = 'Group,Phrase,Latency (ms),Status\n';
+                benchmarkResults.forEach(r => {
+                    csv += `"${r.group}","${r.phrase}",${r.latency_ms != null ? r.latency_ms : ''},${r.status}\n`;
+                });
+                downloadFile('latency_report.csv', csv, 'text/csv');
+            });
+
+            function downloadFile(name, content, mime) {
+                const blob = new Blob([content], { type: mime });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = name;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+        })();
+    </script>
+</body>
+
+</html>

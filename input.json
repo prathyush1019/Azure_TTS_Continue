@@ -1,0 +1,100 @@
+{
+  "test_cases": {
+    "30_chars": [
+      "This string has thirty chars..",
+      "A thirty character test case..",
+      "Exactly thirty chars long here",
+      "Let's test thirty characters..",
+      "Can we do thirty characters?..",
+      "Thirty character string test..",
+      "Testing exactly thirty chars..",
+      "Count exactly thirty letters!!",
+      "This is another thirty chars..",
+      "One more thirty character text"
+    ],
+    "40_chars": [
+      "This string has exactly forty characters",
+      "Here is a forty character test string...",
+      "Measuring latency for forty characters!!",
+      "Exactly forty characters in this string!",
+      "We are testing forty characters length!!",
+      "This is a forty character string test...",
+      "Can we measure exactly forty chars now??",
+      "This sentence is precisely forty letters",
+      "Another forty character test case here!!",
+      "One more forty character text to test..."
+    ],
+    "50_chars": [
+      "This string is exactly fifty characters long right",
+      "Here is a fifty character string for our benchmark",
+      "We are measuring latency with fifty character text",
+      "Exactly fifty characters are contained within here",
+      "Can we measure a fifty character text string now??",
+      "This sentence contains precisely fifty characters!",
+      "Testing the response time for fifty character text",
+      "This is a fifty character benchmark text string...",
+      "Another test case with exactly fifty characters...",
+      "One final test case that has fifty characters long"
+    ],
+    "60_chars": [
+      "This string is exactly sixty characters long for benchmark..",
+      "Here is a sixty character string for our benchmark testing..",
+      "We are measuring latency with sixty character text right now",
+      "Exactly sixty characters are contained within here exactly..",
+      "Can we measure a sixty character text string now exactly??..",
+      "This sentence contains precisely sixty characters exactly!..",
+      "Testing the response time for sixty character text exactly..",
+      "This is a sixty character benchmark text string exactly.....",
+      "Another test case with exactly sixty characters exactly.....",
+      "One final test case that has sixty characters long exactly.."
+    ],
+    "70_chars": [
+      "This string is exactly seventy characters long right for our benchmark",
+      "Here is a seventy character string for our benchmark testing right now",
+      "We are measuring latency with seventy character text right now testing",
+      "Exactly seventy characters are contained within here exactly testing!!",
+      "Can we measure a seventy character text string now exactly testing??!!",
+      "This sentence contains precisely seventy characters exactly testing!..",
+      "Testing the response time for seventy character text exactly testing..",
+      "This is a seventy character benchmark text string exactly testing.....",
+      "Another test case with exactly seventy characters exactly testing.....",
+      "One final test case that has seventy characters long exactly testing.."
+    ],
+    "80_chars": [
+      "This string is exactly eighty characters long right for our benchmark testing...",
+      "Here is a eighty character string for our benchmark testing right now testing...",
+      "We are measuring latency with eighty character text right now testing exactly...",
+      "Exactly eighty characters are contained within here exactly testing exactly!!!",
+      "Can we measure a eighty character text string now exactly testing exactly???!!",
+      "This sentence contains precisely eighty characters exactly testing exactly!!..",
+      "Testing the response time for eighty character text exactly testing exactly...",
+      "This is a eighty character benchmark text string exactly testing exactly......",
+      "Another test case with exactly eighty characters exactly testing exactly......",
+      "One final test case that has eighty characters long exactly testing exactly..."
+    ],
+    "90_chars": [
+      "This is a test sentence that is exactly ninety characters long for benchmarking purposes..",
+      "Another test string that contains exactly ninety characters to check our system latency...",
+      "We need to measure the response time using a string with exactly ninety characters long...",
+      "Evaluating the performance of text to speech with exactly ninety characters in this text..",
+      "Testing exactly ninety characters to see how the system handles the specific length text..",
+      "Can we measure exactly ninety characters now for our benchmark testing purposes right.....",
+      "This specific sentence contains precisely ninety characters exactly for testing purposes..",
+      "Here is another ninety character test case to ensure we have enough data for the test.....",
+      "Measuring the latency of the system with ninety characters exactly in this test case......",
+      "One final ninety character text string to verify the accuracy of the latency measurement.."
+    ],
+    "100_chars": [
+      "This is a test sentence that is exactly one hundred characters long for benchmarking purposes.. test",
+      "Another test string that contains exactly one hundred characters to check our system latency... here",
+      "We need to measure the response time using a string with exactly one hundred characters long... here",
+      "Evaluating the performance of text to speech with exactly one hundred characters in this text.. here",
+      "Testing exactly one hundred characters to see how the system handles the specific length text.. here",
+      "Can we measure exactly one hundred characters now for our benchmark testing purposes right..... here",
+      "This specific sentence contains precisely one hundred characters exactly for testing purposes.. here",
+      "Here is another one hundred character test case to ensure we have enough data for the test..... here",
+      "Measuring the latency of the system with one hundred characters exactly in this test case...... here",
+      "One final one hundred character text string to verify the accuracy of the latency measurement.. here"
+    ]
+  }
+}

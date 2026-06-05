@@ -1,0 +1,57 @@
+{
+  "runs": [
+    {
+      "phrase": "This is a test sentence that is exactly ninety characters long for benchmarking purposes..",
+      "latency_ms": 97.43,
+      "status": "success"
+    },
+    {
+      "phrase": "Another test string that contains exactly ninety characters to check our system latency...",
+      "latency_ms": 112.26,
+      "status": "success"
+    },
+    {
+      "phrase": "We need to measure the response time using a string with exactly ninety characters long...",
+      "latency_ms": 83.63,
+      "status": "success"
+    },
+    {
+      "phrase": "Evaluating the performance of text to speech with exactly ninety characters in this text..",
+      "latency_ms": 98.53,
+      "status": "success"
+    },
+    {
+      "phrase": "Testing exactly ninety characters to see how the system handles the specific length text..",
+      "latency_ms": 98.63,
+      "status": "success"
+    },
+    {
+      "phrase": "Can we measure exactly ninety characters now for our benchmark testing purposes right.....",
+      "latency_ms": 141.61,
+      "status": "success"
+    },
+    {
+      "phrase": "This specific sentence contains precisely ninety characters exactly for testing purposes..",
+      "latency_ms": 110.95,
+      "status": "success"
+    },
+    {
+      "phrase": "Here is another ninety character test case to ensure we have enough data for the test.....",
+      "latency_ms": 109.74,
+      "status": "success"
+    },
+    {
+      "phrase": "Measuring the latency of the system with ninety characters exactly in this test case......",
+      "latency_ms": 110.68,
+      "status": "success"
+    },
+    {
+      "phrase": "One final ninety character text string to verify the accuracy of the latency measurement..",
+      "latency_ms": 176.14,
+      "status": "success"
+    }
+  ],
+  "avg_ms": 113.96,
+  "min_ms": 83.63,
+  "max_ms": 176.14
+}

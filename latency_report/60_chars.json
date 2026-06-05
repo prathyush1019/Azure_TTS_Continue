@@ -1,0 +1,57 @@
+{
+  "runs": [
+    {
+      "phrase": "This string is exactly sixty characters long for benchmark..",
+      "latency_ms": 92.83,
+      "status": "success"
+    },
+    {
+      "phrase": "Here is a sixty character string for our benchmark testing..",
+      "latency_ms": 95.98,
+      "status": "success"
+    },
+    {
+      "phrase": "We are measuring latency with sixty character text right now",
+      "latency_ms": 109.88,
+      "status": "success"
+    },
+    {
+      "phrase": "Exactly sixty characters are contained within here exactly..",
+      "latency_ms": 111.07,
+      "status": "success"
+    },
+    {
+      "phrase": "Can we measure a sixty character text string now exactly??..",
+      "latency_ms": 98.96,
+      "status": "success"
+    },
+    {
+      "phrase": "This sentence contains precisely sixty characters exactly!..",
+      "latency_ms": 100.38,
+      "status": "success"
+    },
+    {
+      "phrase": "Testing the response time for sixty character text exactly..",
+      "latency_ms": 83.01,
+      "status": "success"
+    },
+    {
+      "phrase": "This is a sixty character benchmark text string exactly.....",
+      "latency_ms": 97.38,
+      "status": "success"
+    },
+    {
+      "phrase": "Another test case with exactly sixty characters exactly.....",
+      "latency_ms": 62.87,
+      "status": "success"
+    },
+    {
+      "phrase": "One final test case that has sixty characters long exactly..",
+      "latency_ms": 96.7,
+      "status": "success"
+    }
+  ],
+  "avg_ms": 94.91,
+  "min_ms": 62.87,
+  "max_ms": 111.07
+}
